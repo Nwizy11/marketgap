@@ -262,4 +262,4 @@ Return 15 items per country. Only real verified ${category} companies/products.`
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`MarketGap server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`MarketGap server runnig on port ${PORT}`));
