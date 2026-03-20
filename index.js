@@ -77,6 +77,37 @@ function normalizeResponse(data, countryA, countryB) {
   if (out.countryB) { out.countryB.name = countryB; out.countryB.flag = getFlag(countryB); if (!out.countryB.uniqueItems) out.countryB.uniqueItems = []; }
 
   if (!out.insights) out.insights = {};
+
+  // Normalize summary — model sometimes returns object instead of string
+  const rawSummary = out.insights.summary;
+  if (!rawSummary) {
+    out.insights.summary = `Comparing the ${countryA} and ${countryB} markets reveals distinct differences in product availability, market maturity, and consumer preferences.`;
+  } else if (typeof rawSummary === "object") {
+    out.insights.summary = rawSummary.text || rawSummary.content || rawSummary.description || Object.values(rawSummary).find(v => typeof v === "string") || `Market comparison between ${countryA} and ${countryB}.`;
+  } else {
+    out.insights.summary = String(rawSummary);
+  }
+
+  // Normalize keyDifferences — ensure always array of strings
+  if (!out.insights.keyDifferences || !Array.isArray(out.insights.keyDifferences)) {
+    out.insights.keyDifferences = [];
+  } else {
+    out.insights.keyDifferences = out.insights.keyDifferences
+      .map(d => typeof d === "object" ? (d.text || d.content || d.difference || JSON.stringify(d)) : String(d))
+      .filter(Boolean);
+  }
+
+  // Normalize entrepreneurOpportunity — ensure always a string
+  const rawOpp = out.insights.entrepreneurOpportunity;
+  if (!rawOpp) {
+    out.insights.entrepreneurOpportunity = `There are significant opportunities for entrepreneurs to bridge market gaps between ${countryA} and ${countryB} in this category.`;
+  } else if (typeof rawOpp === "object") {
+    out.insights.entrepreneurOpportunity = rawOpp.text || rawOpp.content || rawOpp.description || Object.values(rawOpp).find(v => typeof v === "string") || "";
+  } else {
+    out.insights.entrepreneurOpportunity = String(rawOpp);
+  }
+
+  // Normalize opportunityScore — ensure always integers
   if (!out.insights.opportunityScore) out.insights.opportunityScore = {};
   const sA = out.insights.opportunityScore.countryA;
   const sB = out.insights.opportunityScore.countryB;
@@ -262,4 +293,4 @@ Return 15 items per country. Only real verified ${category} companies/products.`
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`MarketGap server runnig on port ${PORT}`));
+app.listen(PORT, () => console.log(`MarketGap server running on port ${PORT}`));
